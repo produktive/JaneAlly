@@ -33,3 +33,6 @@ If you setup automatic running and you want to stop it, simply right-click and o
 
 #### What if I entered incorrect information on installation and need to start over?
 Delete the file `settings.conf` in the JaneAlly folder and then run `JaneAlly.command` again.
+
+#### How do I know if my claims successfully uploaded?
+You will get an email from OfficeAlly when they are picked up for processing that the upload was successful.
