@@ -5,23 +5,41 @@ mkdir -p EDI
 mkdir -p ERA
 
 if [[ ! -f "settings.conf" ]]; then
-	echo 'Welcome to JaneAlly! Please enter your OfficeAlly SFTP login details to begin.'
-	read -p 'OfficeAlly SFTP address: ' host
-	read -p 'OfficeAlly SFTP username: ' user
-	read -sp 'OfficeAlly SFTP password: ' pass; echo
-	read -p 'Do you want to automatically run every day (yes/no)? ' auto
-	if [ $auto == 'yes' ]; then
+	
+	while true; do
+		echo 'Welcome to JaneAlly! Please enter your OfficeAlly SFTP login details to begin.'
+		read -p 'OfficeAlly SFTP address: ' host
+		read -p 'OfficeAlly SFTP username: ' user
+		read -p 'OfficeAlly SFTP password: ' pass
+		read -p 'Do you want to automatically run every day (yes/no)? ' auto
+		if [ "$auto" != 'yes' ]; then auto='no'; fi
+		echo 'It is extremely important that you verify your login details or risk getting locked out of your OfficeAlly account.'
+		read -p 'Is this information correct (yes/no)? ' confirm
+		if [ "$confirm" == 'yes' ]; then
+			break
+		else
+			continue
+		fi
+	done
+	
+	
+	if [ "$auto" == 'yes' ]; then
 		job="0 4 * * 0 $SCRIPT_DIR/JaneAlly.command"
-		cat <(fgrep -i -v "$SCRIPT_DIR/JaneAlly.sh" <(crontab -l)) <(echo "$job") | crontab -
+		cat <(fgrep -i -v "$SCRIPT_DIR/JaneAlly.command" <(crontab -l)) <(echo "$job") | crontab -
+		echo 'Great, JaneAlly will automatically run daily at 4 am. Leave this computer on.'
+	else
+		echo 'Great, you will need to run this program manually whenever you want to transmit files.'
 	fi
+	
 	echo -en "host=\"$host\"\nport=\"22\"\nuser=\"$user\"\npass=\"$(echo "$pass" | base64)\"" > settings.conf
-	echo
+	echo 'Please wait, running the program for the first time takes a couple minutes...'
+
 fi
 
 . settings.conf
 pass=$(echo "$pass" | base64 --decode)
 if [[ -f "history.log" ]]; then
-	mv history.log history.old
+	mv history.log history.tmp
 fi
 
 expect <(cat <<EOD
@@ -30,11 +48,10 @@ set timeout 20
 # Connect to SFTP server
 spawn sftp -P $port -oUser=$user -p $host
 expect {
-  "yes/no" { send "yes\r";exp_continue}
-  "assword:"
+  "yes/no" {send "yes\r";exp_continue}
+  "assword:" {send "$pass\r";exp_continue}
+	sftp>
 }
-send "$pass\r"
-expect sftp>
 
 # Upload edi files to inbound folder
 send "put EDI/*.edi inbound\r"
@@ -43,24 +60,23 @@ expect sftp>
 # Get list of remittance files
 log_file -noappend history.log
 send "ls outbound/*ERA_STATUS*.zip -1t\r"
-expect "sftp>"
+expect sftp>
 log_file
 send "!sed -i '' 1d ./history.log\r"
-expect "sftp>"
+expect sftp>
 send "!sed -i '' '/sftp>/d' ./history.log\r"
-expect "sftp>"
+expect sftp>
 send "exit\r"
 expect eof
 EOD
 )
 
-if [[ -f "history.old" ]]; then
-	newfiles=$(comm -13 history.old history.log)
-	#IFS=' ' read -a arr <<< "$newfiles"
+# Get filenames of new files only
+if [[ -f "history.tmp" ]]; then
+	newfiles=$(comm -13 history.tmp history.log)
 else
 	newfiles=$(< history.log)
 fi
-
 newfiles=$(echo $newfiles | tr -d "\t\n\r" | tr -s ' ')
 
 if [ ! -z "$newfiles" ]; then
@@ -74,7 +90,7 @@ if [ ! -z "$newfiles" ]; then
 	expect sftp>
 	foreach file [split [string trim "$newfiles"]] {
 		send "get \$file ERA\r"
-		expect "sftp>"
+		expect sftp>
 	}
 
 	send "exit\r"
@@ -90,9 +106,9 @@ echo 'Files downloaded, extracting remittances...'
 fi
 
 echo 'Extraction complete, cleaning up files...'
-rm -f ERA/*.zip
 rm -f EDI/*.edi
-rm -f history.old
+rm -f ERA/*.zip
+rm -f history.tmp
 echo 'Clean up complete.'
 osascript -e 'tell application "Terminal" to quit' &
 exit
