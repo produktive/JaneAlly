@@ -24,9 +24,9 @@ if [[ ! -f "settings.conf" ]]; then
 	
 	
 	if [ "$auto" == 'yes' ]; then
-		job="0 4 * * 0 $SCRIPT_DIR/JaneAlly.command"
+		job="0 8 * * * \"$SCRIPT_DIR/JaneAlly.command\" > \"$SCRIPT_DIR/cron.log\" 2>&1"
 		cat <(fgrep -i -v "$SCRIPT_DIR/JaneAlly.command" <(crontab -l)) <(echo "$job") | crontab -
-		echo 'Great, JaneAlly will automatically run daily at 4 am. Leave this computer on.'
+		echo 'Great, JaneAlly will automatically run daily at 8 am. Leave this computer on.'
 	else
 		echo 'Great, you will need to run this program manually whenever you want to transmit files.'
 	fi
