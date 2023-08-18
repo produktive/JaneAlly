@@ -35,4 +35,4 @@ If you setup automatic running and you want to stop it, simply right-click and o
 Delete the file `settings.conf` in the JaneAlly folder and then run `JaneAlly.command` again.
 
 #### How do I know if my claims successfully uploaded?
-You will get an email from OfficeAlly when they are picked up for processing that the upload was successful.
+You will get an email from OfficeAlly when they are picked up for processing that the upload was successful. You can also open `autolog.txt` to see the results of the last time JaneAlly automatically ran. If you do not have `autolog.txt` then you do not have automatic running enabled or it has not run yet.
