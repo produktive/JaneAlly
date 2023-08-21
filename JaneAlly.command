@@ -22,9 +22,9 @@ if [[ ! -f "settings.conf" ]]; then
 	
 	
 	if [ "$auto" == 'yes' ]; then
-		job="0 8 * * * \"$SCRIPT_DIR/JaneAlly.command\" > \"$SCRIPT_DIR/autolog.txt\" 2>&1"
+		job="0 6,18 * * * \"$SCRIPT_DIR/JaneAlly.command\" > \"$SCRIPT_DIR/autolog.txt\" 2>&1"
 		cat <(fgrep -i -v "$SCRIPT_DIR/JaneAlly.command" <(crontab -l)) <(echo "$job") | crontab -
-		echo 'Great, JaneAlly will automatically run daily at 8 am. Leave this computer on.'
+		echo 'Great, JaneAlly will automatically run daily at 6 am and 6 pm. Leave this computer on.'
 	else
 		echo 'Great, you will need to run this program manually whenever you want to transmit files.'
 	fi
@@ -95,17 +95,17 @@ if [ ! -z "$newfiles" ]; then
 EOD
 	)
 		
-echo 'Files downloaded, extracting remittances...'
+	echo 'Files downloaded, extracting remittances...'
 	for z in ERA/*.zip; do 
 		fname=${z:4:35}
 		unzip -j "$z" "${fname/STATUS/835}.835" -d "ERA"
 	done
+	echo 'Extraction complete, cleaning up files...'
 fi
 
-echo 'Extraction complete, cleaning up files...'
 rm -f EDI/*.edi
 rm -f ERA/*.zip
 rm -f history.tmp
-echo 'Clean up complete.'
+echo 'Clean up complete. Goodbye!'
 osascript -e 'tell application "Terminal" to quit' &
 exit
