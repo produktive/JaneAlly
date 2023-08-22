@@ -9,7 +9,16 @@ if [[ ! -f "settings.conf" ]]; then
 		echo 'Welcome to JaneAlly! Please enter your OfficeAlly SFTP login details to begin.'
 		read -p 'OfficeAlly SFTP address: ' host
 		read -p 'OfficeAlly SFTP username: ' user
-		read -p 'OfficeAlly SFTP password: ' pass
+		pass=x check=
+		while [[ "$pass" != "$check" ]]; do
+		    read -sp 'OfficeAlly SFTP password: ' pass
+				echo
+		    read -sp 'Same password again: ' check
+				echo
+		    if [[ "$pass" != "$check" ]]; then
+		        echo "Passwords don't match. Try again."
+		    fi
+		done
 		read -p 'Do you want to automatically run every day (yes/no)? ' auto
 		echo 'It is extremely important that you verify your login details or risk getting locked out of your OfficeAlly account.'
 		read -p 'Is this information correct (yes/no)? ' confirm
@@ -29,7 +38,7 @@ if [[ ! -f "settings.conf" ]]; then
 		echo 'Great, you will need to run this program manually whenever you want to transmit files.'
 	fi
 	
-	printf 'host="%s"\nport="%s"\nuser="%s"\npass="%s"\n' "$host" "22" "$user" "$(base64 <<<"$pass")" > settings.conf
+	printf 'host="%s"\nuser="%s"\npass="%s"\n' "$host" "$user" "$(base64 <<<"$pass")" > settings.conf
 	echo 'Please wait, running the program for the first time takes a couple minutes...'
 
 fi
@@ -44,7 +53,7 @@ expect <<EOD
 set timeout 20
 
 # Connect to SFTP server
-spawn sftp -P $port -oUser=$user -p $host
+spawn sftp -P 22 -oUser=$user -p $host
 expect {
   "yes/no" {send "yes\r";exp_continue}
   "assword:" {send "$pass\r";exp_continue}
