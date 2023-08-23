@@ -79,11 +79,11 @@ EOD
 
 # Get filenames of new files only
 if [[ -f "history.tmp" ]]; then
-    newfiles=$(comm -13 history.tmp history.log)
+    newfiles=$(comm -13 <(sort history.tmp) <(sort history.log))
 else
     newfiles=$(< history.log)
 fi
-newfiles=$(echo $newfiles | tr -d "\t\n\r" | tr -s ' ')
+newfiles=$(echo $newfiles | tr -s "\t\n\r" " ")
 
 if [ ! -z "$newfiles" ]; then
 	expect <(cat <<EOD
