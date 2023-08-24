@@ -113,9 +113,7 @@ else
 	echo 'No new remittances to download, cleaning up files...'
 fi
 
-rm -f EDI/*.edi
-rm -f ERA/*.zip
-rm -f history.tmp
+rm -f EDI/*.edi ERA/*.zip history.tmp
 echo 'Clean up complete. Goodbye!'
 osascript -e 'tell application "Terminal" to quit' &
 exit
