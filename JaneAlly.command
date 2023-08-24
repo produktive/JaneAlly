@@ -85,8 +85,8 @@ else
 fi
 newfiles=$(echo $newfiles | tr -s "\t\n\r" " ")
 
-if [ ! -z "$newfiles" ]; then
-	expect <(cat <<EOD
+if [[ "$newfiles" != " " ]]; then
+	expect <<EOD
 	set timeout 20
 
 	# Connect to SFTP server
@@ -102,7 +102,6 @@ if [ ! -z "$newfiles" ]; then
 	send "exit\r"
 	expect eof
 EOD
-	)
 		
 	echo 'Files downloaded, extracting remittances...'
 	for z in ERA/*.zip; do 
@@ -110,6 +109,8 @@ EOD
 		unzip -j "$z" "${fname/STATUS/835}.835" -d "ERA"
 	done
 	echo 'Extraction complete, cleaning up files...'
+else
+	echo 'No new remittances to download, cleaning up files...'
 fi
 
 rm -f EDI/*.edi
